@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>pcapscope: packet capture analysis in your browser</title>
+<meta name="description" content="Drop a .pcap or .pcapng file and see protocols, conversations, DNS, TLS server names, HTTP and security findings. Parsed locally, never uploaded.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='1' y='9' width='2' height='6' fill='%233462C9'/%3E%3Crect x='4' y='4' width='2' height='11' fill='%23C9821B'/%3E%3Crect x='7' y='7' width='2' height='8' fill='%232F8F5B'/%3E%3Crect x='10' y='2' width='2' height='13' fill='%23C2410C'/%3E%3Crect x='13' y='10' width='2' height='5' fill='%237B4FC9'/%3E%3C/svg%3E">
+</head>
+<body>
+<header class="bar">
+  <a class="brand" href="./">pcapscope</a>
+  <span id="filename" class="filename"></span>
+  <div class="bar-actions">
+    <label class="btn">Open capture<input type="file" id="file" accept=".pcap,.pcapng,.cap,application/vnd.tcpdump.pcap" hidden></label>
+    <button type="button" id="sample" class="btn quiet">Load the sample</button>
+  </div>
+</header>
+
+<main>
+  <section id="landing" class="landing">
+    <h1>See what's in a packet capture without opening Wireshark.</h1>
+    <p>Drop a <code>.pcap</code> or <code>.pcapng</code> file anywhere on this page. You get the protocols, who talked to whom, every DNS lookup, the TLS server names, HTTP requests, and a list of things that look wrong: credentials in clear text, port scans, ARP spoofing, DNS tunnelling.</p>
+    <p class="privacy">Parsed entirely in your browser. The file never leaves your machine.</p>
+    <div id="drop" class="drop" tabindex="0" role="button" aria-label="Choose a capture file">
+      <span>Drop a capture here, or click to choose one</span>
+    </div>
+    <p class="hint">No capture handy? <button type="button" class="link" id="sample2">Open the sample</button>: two minutes of a small office with a few problems planted in it.</p>
+  </section>
+
+  <section id="report" hidden>
+    <p id="summary" class="summary"></p>
+    <div class="tl-wrap">
+      <svg id="timeline" role="img" aria-label="Traffic over time by protocol"></svg>
+      <div class="tl-axis"><span id="tl-start"></span><span id="tl-sel" class="tl-sel"></span><span id="tl-end"></span></div>
+    </div>
+    <div id="legend" class="legend"></div>
+
+    <nav class="tabs" role="tablist" id="tabs">
+      <button role="tab" data-tab="findings" aria-selected="true">Findings <span class="n" id="n-findings"></span></button>
+      <button role="tab" data-tab="convs" aria-selected="false">Conversations <span class="n" id="n-convs"></span></button>
+      <button role="tab" data-tab="dns" aria-selected="false">DNS <span class="n" id="n-dns"></span></button>
+      <button role="tab" data-tab="web" aria-selected="false">TLS &amp; HTTP <span class="n" id="n-web"></span></button>
+      <button role="tab" data-tab="packets" aria-selected="false">Packets <span class="n" id="n-packets"></span></button>
+    </nav>
+
+    <section class="panel" data-panel="findings"><ol id="findings" class="findings"></ol></section>
+    <section class="panel" data-panel="convs" hidden><div class="scroll"><table id="convs" class="t"></table></div></section>
+    <section class="panel" data-panel="dns" hidden><div class="scroll"><table id="dns" class="t"></table></div></section>
+    <section class="panel" data-panel="web" hidden>
+      <h3>TLS server names</h3><div class="scroll"><table id="tls" class="t"></table></div>
+      <h3>HTTP requests</h3><div class="scroll"><table id="http" class="t"></table></div>
+    </section>
+    <section class="panel" data-panel="packets" hidden>
+      <div class="filter">
+        <label for="filter" class="vh">Filter packets</label>
+        <input id="filter" placeholder="filter: dns, tls, 10.10.5.23, port 443, syn, retrans" spellcheck="false" autocomplete="off">
+        <span id="filter-count"></span>
+      </div>
+      <div class="pk">
+        <div class="pk-list" id="pk-list" tabindex="0"></div>
+        <aside class="pk-detail" id="pk-detail"><p class="muted">Pick a packet to see its layers and bytes.</p></aside>
+      </div>
+    </section>
+  </section>
+
+  <p id="status" class="status" role="status"></p>
+</main>
+
+<div id="dropveil" class="dropveil" hidden>Drop to analyse</div>
+
+<footer class="foot">
+  pcapscope runs entirely in your browser. <a href="https://github.com/GreatsLab/pcapscope">Source on GitHub</a>
+</footer>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
