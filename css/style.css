@@ -18,6 +18,8 @@ body { background: var(--page); color: var(--ink); font: 16px/1.5 var(--sans); f
 code { font-family: var(--mono); font-size: .88em; background: #ECEEF2; padding: 1px 4px; border-radius: 3px; }
 a { color: var(--ink); }
 :focus-visible { outline: 3px solid var(--p-tcp); outline-offset: 2px; }
+/* display:grid/flex on an element beats the hidden attribute otherwise */
+[hidden] { display: none !important; }
 .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 .muted { color: var(--ink2); }
 
@@ -118,6 +120,8 @@ main { max-width: 1280px; margin: 0 auto; padding: 0 24px 40px; }
   .pk-row { grid-template-columns: 40px 56px 1fr; }
   .pk-row .c-time, .pk-row .c-src, .pk-row .c-dst { display: none; }
   .findings li { grid-template-columns: 1fr; }
+  .findings .sev { justify-self: start; }
+  .tl-sel { display: none; }
   .bar-actions { margin-left: 0; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }

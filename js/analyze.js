@@ -51,7 +51,7 @@ export function analyze(packets, { timelineBuckets = 120 } = {}) {
         let m = scan.get(p.src);
         if (!m) scan.set(p.src, (m = new Map()));
         let s = m.get(p.dst);
-        if (!s) m.set(p.dst, (s = new Set()));
+        if (!s) { m.set(p.dst, (s = new Set())); s.firstN = p.n; }
         s.add(p.dport);
       }
       if (syn && ack) synAcked.add(`${p.dst}>${p.src}:${p.sport}`);
@@ -121,9 +121,13 @@ export function analyze(packets, { timelineBuckets = 120 } = {}) {
   for (const [src, m] of scan) {
     let ports = 0;
     const targets = [];
-    for (const [dst, s] of m) { ports += s.size; if (s.size >= 15) targets.push(`${dst} (${s.size} ports)`); }
+    let firstN;
+    for (const [dst, s] of m) {
+      ports += s.size;
+      if (s.size >= 15) { targets.push(`${dst} (${s.size} ports)`); firstN ??= s.firstN; }
+    }
     if (targets.length) {
-      a.findings.push({ severity: "high", kind: "port-scan", title: `${src} looks like it's port scanning`,
+      a.findings.push({ severity: "high", kind: "port-scan", n: firstN, title: `${src} looks like it's port scanning`,
         detail: `SYNs to many ports on ${targets.join(", ")}.` });
     } else if (m.size >= 30) {
       a.findings.push({ severity: "medium", kind: "host-sweep", title: `${src} tried to connect to ${m.size} different hosts`,
