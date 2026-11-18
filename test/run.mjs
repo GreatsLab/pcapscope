@@ -1,0 +1,14 @@
+import { readFileSync } from "node:fs";
+import { readFrames } from "../js/pcap.js";
+import { decode } from "../js/decode.js";
+import { analyze } from "../js/analyze.js";
+const f = process.argv[2];
+const b = readFileSync(f);
+const ab = b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength);
+const pk = [...readFrames(ab)].map(decode);
+const a = analyze(pk);
+console.log(a.count, "packets", a.duration.toFixed(1)+"s");
+console.log([...a.protocols].map(([k,v])=>`${k}:${v.packets}`).join(" "));
+console.log("convs", a.conversations.size, "dns", a.dns.length, "tls", [...a.tls.keys()].join(","));
+a.findings.forEach(x=>console.log(x.severity, x.title));
+console.log(pk.slice(0,3).map(p=>p.info));
