@@ -33,7 +33,7 @@ export function analyze(packets, { timelineBuckets = 120 } = {}) {
       let c = a.conversations.get(key);
       if (!c) {
         const [x, y] = order(p);
-        c = { key, a: x.ip, ap: x.port, b: y.ip, bp: y.port, proto: p.proto, app: p.app || "",
+        c = { key, a: x.ip, ap: x.port, b: y.ip, bp: y.port, proto: p.proto, app: p.app || p.service || "",
               packets: 0, bytes: 0, ab: 0, ba: 0, first: p.ts, last: p.ts, flags: new Set() };
         a.conversations.set(key, c);
       }

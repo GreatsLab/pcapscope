@@ -188,15 +188,24 @@ function icmp(p, d, o, end, v6) {
 // ---- application layer -----------------------------------------------
 
 function app(p, payload, l4) {
+  // the port only *suggests* a service. Label the packet with it only when it
+  // carries data, otherwise a port scan's empty SYNs show up as "Telnet",
+  // "MySQL", "RDP"... in the protocol breakdown.
   const label = PORTS[p.dport] || PORTS[p.sport];
-  if (label) p.app = label;
+  if (label) p.service = label;
+  if (label && (payload.length || l4 === "udp")) p.app = label;
 
   // content beats port numbers where we can tell
   if (l4 === "tcp" && payload.length > 5 && payload[0] === 0x16 && payload[1] === 0x03) {
     const t = tls(payload);
     if (t) { p.app = "TLS"; p.tls = t; p.stack.push("TLS"); p.info = t.info; return; }
   }
-  if (l4 === "tcp" && payload.length >= 4 && /^(GET|POST|PUT|HEAD|DELETE|OPTIONS|PATCH|CONNECT) /.test(ascii(payload, 0, 10))) {
+  const line0 = payload.length >= 8 ? firstLine(payload) : "";
+  // SIP reuses HTTP's request syntax (OPTIONS, INVITE...), only the version differs
+  if (/ SIP\/2\.0$/.test(line0) || /^SIP\/2\.0 \d{3}/.test(line0)) {
+    p.app = "SIP"; p.stack.push("SIP"); p.info = line0; return;
+  }
+  if (l4 === "tcp" && /^(GET|POST|PUT|HEAD|DELETE|OPTIONS|PATCH|CONNECT) \S+ HTTP\/\d/.test(line0)) {
     p.app = "HTTP"; p.http = httpReq(payload); p.stack.push("HTTP");
     p.info = `${p.http.method} ${p.http.path}${p.http.host ? `  Host: ${p.http.host}` : ""}`;
     return;
